@@ -4,6 +4,13 @@
     -webkit-box-sizing: border-box;
     font-family: 'Quicksand';
   }
+
+  body {
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior-y: contain;
+ }
   
   html, body {
     margin: 0px !important;
