@@ -1,7 +1,7 @@
 {
     "short_name": "Twittor",
     "name": "Una aplicación sencilla de Twitter para superhéroes",
-    "start_url": "index.html",
+    "start_url": "./index.html",
     "background_color": "#3498DB",
     "theme_color": "#3498DB",
     "display": "standalone",
