@@ -1,5 +1,5 @@
 //Registro de caches
-const STATIC_CACHE = 'static-v5';
+const STATIC_CACHE = 'static-v6';
 const DYNAMIC_CACHE = 'dynamic-v2';
 const INMUTABLE_CACHE = 'inmutable-v1';
 
@@ -7,7 +7,6 @@ const INMUTABLE_CACHE = 'inmutable-v1';
 const APP_SHELL_STATIC = [
     //'/',
     'index.html',
-    'manifest.json',
     'css/style.css',
     'img/favicon.ico',
     'img/avatars/hulk.jpg',
