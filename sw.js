@@ -1,6 +1,6 @@
 //Registro de caches
 const STATIC_CACHE = 'static-v6';
-const DYNAMIC_CACHE = 'dynamic-v3';
+const DYNAMIC_CACHE = 'dynamic-v4';
 const INMUTABLE_CACHE = 'inmutable-v1';
 
 //Registro de la estructura de la APP en un array para el cache STATIC
