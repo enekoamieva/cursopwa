@@ -86,9 +86,10 @@ self.addEventListener('fetch', event => {
             return fetch( event.request ).then( fetchResponse => {
                 //Guardamos el cache
                 caches.open(DYNAMIC_CACHE).then( cache => {
-                    cache.put( event.request, fetchResponse.clone() );
-                    fetchResponse.clone();
+                    cache.put( event.request, fetchResponse );
+                    
                 });
+                return fetchResponse.clone();
             });
         }
         
