@@ -84,12 +84,17 @@ self.addEventListener('fetch', event => {
             //Verificamos las URLS que no están siendo almacenadas en caché
             //console.log(event.request.url);
             return fetch( event.request ).then( fetchResponse => {
-                //Guardamos el cache
-                caches.open(DYNAMIC_CACHE).then( cache => {
-                    cache.put( event.request, fetchResponse.clone() );
-                    return fetchResponse.clone();
-                });
-                
+
+                if( res.ok) {
+                    //Guardamos el cache
+                    return caches.open(DYNAMIC_CACHE).then( cache => {
+                        cache.put( event.request, fetchResponse.clone() );
+                        return fetchResponse.clone();
+                    });
+                } else {
+                    return res;
+                }
+
             });
         }
         
