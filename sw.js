@@ -1,13 +1,10 @@
-// imports
-importScripts('./js/sw-utils.js');
-
-
-const STATIC_CACHE    = 'static-v1';
-const DYNAMIC_CACHE   = 'dynamic-v1';
+//Registro de caches
+const STATIC_CACHE = 'static-v6';
+const DYNAMIC_CACHE = 'dynamic-v4';
 const INMUTABLE_CACHE = 'inmutable-v1';
 
-
-const APP_SHELL = [
+//Registro de la estructura de la APP en un array para el cache STATIC
+const APP_SHELL_STATIC = [
     //'/',
     'index.html',
     'css/style.css',
@@ -20,6 +17,7 @@ const APP_SHELL = [
     'js/app.js'
 ];
 
+//Registro de la estructura de la APP en un array para el cache INMUTABLE
 const APP_SHELL_INMUTABLE = [
     'https://fonts.googleapis.com/css?family=Quicksand:300,400',
     'https://fonts.googleapis.com/css?family=Lato:400,300',
@@ -30,70 +28,73 @@ const APP_SHELL_INMUTABLE = [
 
 
 
-self.addEventListener('install', e => {
+//Creamos los cachés y le asignamos las rutas a guardar que hemos generado arriba
+self.addEventListener('install', event => {
 
-
-    const cacheStatic = caches.open( STATIC_CACHE ).then(cache => 
-        cache.addAll( APP_SHELL ));
-
-    const cacheInmutable = caches.open( INMUTABLE_CACHE ).then(cache => 
-        cache.addAll( APP_SHELL_INMUTABLE ));
-
-
-
-    e.waitUntil( Promise.all([ cacheStatic, cacheInmutable ])  );
-
-});
-
-
-self.addEventListener('activate', e => {
-
-    const respuesta = caches.keys().then( keys => {
-
-        keys.forEach( key => {
-
-            if (  key !== STATIC_CACHE && key.includes('static') ) {
-                return caches.delete(key);
-            }
-
-            if (  key !== DYNAMIC_CACHE && key.includes('dynamic') ) {
-                return caches.delete(key);
-            }
-
-        });
-
+    //Creamos el cache STATIC
+    const cacheStatic = caches.open( STATIC_CACHE ).then(cache => {
+        return cache.addAll( APP_SHELL_STATIC );
     });
 
-    e.waitUntil( respuesta );
+    //Creamos el cache INMUTABLE
+    const cacheInmutable = caches.open( INMUTABLE_CACHE ).then(cache => {
+        return cache.addAll( APP_SHELL_INMUTABLE );
+    });
+
+    event.waitUntil( Promise.all([ cacheStatic, cacheInmutable ]) );
 
 });
 
 
 
+//Eliminar los caches antiguos y que no sirven ya
+self.addEventListener('activate', event => {
 
-self.addEventListener( 'fetch', e => {
+    //Verificamos si en el cache, existen otros con el nombre de 'static'
+    const deleteCaches = caches.keys().then(keys => {
+        //Interactuamos con cada cache guardado
+        keys.forEach(key => {
+            //Eliminamos el cache estatico que no se usa para tener la última versión registrada
+            if( key != STATIC_CACHE && key.includes('static') ) {
+                return caches.delete(key);
+            }
+
+            //Eliminamos el cache dinámico que no se usa para tener la última versión registrada
+            if( key != DYNAMIC_CACHE && key.includes('dynamic') ) {
+                return caches.delete(key);
+            }
+        });
+    });
+
+    event.waitUntil(deleteCaches);
+
+});
 
 
-    const respuesta = caches.match( e.request ).then( res => {
 
-        if ( res ) {
+//Estrategia de CACHE ONLY que servirá para meter recursos en el caché DINAMICO
+self.addEventListener('fetch', event => {
+
+    //Comprobamos todas las rutas de los ficheros en el caché
+    const respuesta = caches.match( event.request ).then(res => {
+
+        if(res) {
             return res;
         } else {
-
-            return fetch( e.request ).then( newRes => {
-
-                return actualizaCacheDinamico( DYNAMIC_CACHE, e.request, newRes );
-
+            //Verificamos las URLS que no están siendo almacenadas en caché
+            //console.log(event.request.url);
+            return fetch( event.request ).then( fetchResponse => {
+                //Guardamos el cache
+                caches.open(DYNAMIC_CACHE).then( cache => {
+                    cache.put( event.request, fetchResponse.clone() );
+                    return fetchResponse.clone();
+                });
+                
             });
-
         }
-
+        
     });
 
-
-
-    e.respondWith( respuesta );
+    event.waitUntil(respuesta);
 
 });
-
-
