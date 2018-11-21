@@ -85,14 +85,14 @@ self.addEventListener('fetch', event => {
             //console.log(event.request.url);
             return fetch( event.request ).then( fetchResponse => {
 
-                if( res.ok) {
+                if( fetchResponse.ok ) {
                     //Guardamos el cache
                     return caches.open(DYNAMIC_CACHE).then( cache => {
                         cache.put( event.request, fetchResponse.clone() );
                         return fetchResponse.clone();
                     });
                 } else {
-                    return res;
+                    return fetchResponse;
                 }
 
             });
