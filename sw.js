@@ -1,10 +1,13 @@
-//Registro de caches
-const STATIC_CACHE = 'static-v6';
-const DYNAMIC_CACHE = 'dynamic-v4';
+// imports
+importScripts('./js/sw-utils.js');
+
+
+const STATIC_CACHE    = 'static-v1';
+const DYNAMIC_CACHE   = 'dynamic-v1';
 const INMUTABLE_CACHE = 'inmutable-v1';
 
-//Registro de la estructura de la APP en un array para el cache STATIC
-const APP_SHELL_STATIC = [
+
+const APP_SHELL = [
     //'/',
     'index.html',
     'css/style.css',
@@ -17,7 +20,6 @@ const APP_SHELL_STATIC = [
     'js/app.js'
 ];
 
-//Registro de la estructura de la APP en un array para el cache INMUTABLE
 const APP_SHELL_INMUTABLE = [
     'https://fonts.googleapis.com/css?family=Quicksand:300,400',
     'https://fonts.googleapis.com/css?family=Lato:400,300',
@@ -28,73 +30,70 @@ const APP_SHELL_INMUTABLE = [
 
 
 
-//Creamos los cachés y le asignamos las rutas a guardar que hemos generado arriba
-self.addEventListener('install', event => {
+self.addEventListener('install', e => {
 
-    //Creamos el cache STATIC
-    const cacheStatic = caches.open( STATIC_CACHE ).then(cache => {
-        return cache.addAll( APP_SHELL_STATIC );
-    });
 
-    //Creamos el cache INMUTABLE
-    const cacheInmutable = caches.open( INMUTABLE_CACHE ).then(cache => {
-        return cache.addAll( APP_SHELL_INMUTABLE );
-    });
+    const cacheStatic = caches.open( STATIC_CACHE ).then(cache => 
+        cache.addAll( APP_SHELL ));
 
-    event.waitUntil( Promise.all([ cacheStatic, cacheInmutable ]) );
+    const cacheInmutable = caches.open( INMUTABLE_CACHE ).then(cache => 
+        cache.addAll( APP_SHELL_INMUTABLE ));
+
+
+
+    e.waitUntil( Promise.all([ cacheStatic, cacheInmutable ])  );
 
 });
 
 
+self.addEventListener('activate', e => {
 
-//Eliminar los caches antiguos y que no sirven ya
-self.addEventListener('activate', event => {
+    const respuesta = caches.keys().then( keys => {
 
-    //Verificamos si en el cache, existen otros con el nombre de 'static'
-    const deleteCaches = caches.keys().then(keys => {
-        //Interactuamos con cada cache guardado
-        keys.forEach(key => {
-            //Eliminamos el cache estatico que no se usa para tener la última versión registrada
-            if( key != STATIC_CACHE && key.includes('static') ) {
+        keys.forEach( key => {
+
+            if (  key !== STATIC_CACHE && key.includes('static') ) {
                 return caches.delete(key);
             }
 
-            //Eliminamos el cache dinámico que no se usa para tener la última versión registrada
-            if( key != DYNAMIC_CACHE && key.includes('dynamic') ) {
+            if (  key !== DYNAMIC_CACHE && key.includes('dynamic') ) {
                 return caches.delete(key);
             }
+
         });
+
     });
 
-    event.waitUntil(deleteCaches);
+    e.waitUntil( respuesta );
 
 });
 
 
 
-//Estrategia de CACHE ONLY que servirá para meter recursos en el caché DINAMICO
-self.addEventListener('fetch', event => {
 
-    //Comprobamos todas las rutas de los ficheros en el caché
-    const respuesta = caches.match( event.request ).then(res => {
+self.addEventListener( 'fetch', e => {
 
-        if(res) {
+
+    const respuesta = caches.match( e.request ).then( res => {
+
+        if ( res ) {
             return res;
         } else {
-            //Verificamos las URLS que no están siendo almacenadas en caché
-            //console.log(event.request.url);
-            return fetch( event.request ).then( fetchResponse => {
-                //Guardamos el cache
-                caches.open(DYNAMIC_CACHE).then( cache => {
-                    cache.put( event.request, fetchResponse.clone() );
-                    return fetchResponse.clone();
-                });
-                
+
+            return fetch( e.request ).then( newRes => {
+
+                return actualizaCacheDinamico( DYNAMIC_CACHE, e.request, newRes );
+
             });
+
         }
-        
+
     });
 
-    event.waitUntil(respuesta);
+
+
+    e.respondWith( respuesta );
 
 });
+
+
